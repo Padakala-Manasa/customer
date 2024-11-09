@@ -30,7 +30,7 @@
   padding: 20px; /* Add some padding for spacing */
   box-sizing: border-box;
   /* Use relative paths in CSS */
-  background: url('C:\Users\Manasa\OneDrive\Desktop\telecom-gamification\public\tele.jpg') no-repeat center center/cover;
+  background: url('/public/tele.jpg') no-repeat center center/cover;
 
  /* Include padding in height calculations */
 }
