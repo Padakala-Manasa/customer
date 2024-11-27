@@ -4,7 +4,7 @@
 
 .badges-panel {
   display: flex; /* Use flexbox for side-by-side layout */
-  background: url('C:\Users\Manasa\OneDrive\Desktop\telecom-gamification\public\badge.jpg') no-repeat center center/cover; /* Add background image */
+  background: url('/public/badge.jpg') no-repeat center center/cover; /* Add background image */
   border-radius: 8px; /* Optional: rounded corners */
   padding: 20px; /* Padding inside the panel */
 }

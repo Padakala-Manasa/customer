@@ -1,13 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const nodemailer = require('nodemailer');
 require('dotenv').config(); // Load environment variables from .env file
-const mongoose = require('mongoose');
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -15,19 +8,6 @@ const PORT = process.env.PORT || 5001;
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Define Mongoose Schemas
-const feedbackSchema = new mongoose.Schema({
-  email: { type: String, required: true },
-  feedback: { type: String, required: true },
-});
-
-const suggestionSchema = new mongoose.Schema({
-  suggestion: { type: String, required: true },
-});
-
-const Feedback = mongoose.model('Feedback', feedbackSchema);
-const Suggestion = mongoose.model('Suggestion', suggestionSchema);
 
 // Sample badge data
 const badges = [
@@ -48,15 +28,6 @@ const questions = [
   { id: 6, question: "Would you like more flexible plan options?", type: "interest" },
 ];
 
-// Setup Nodemailer transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail', // Use your email service (like Gmail)
-  auth: {
-    user: process.env.EMAIL_USER, // Replace with your email from .env
-    pass: process.env.EMAIL_PASS, // Replace with your email password or app password from .env
-  },
-});
-
 // Endpoints
 app.get('/badges', (req, res) => {
   res.json(badges);
@@ -69,57 +40,44 @@ app.get('/api/quiz', (req, res) => {
 });
 
 // Feedback submission endpoint
-app.post('/feedback', async (req, res) => {
+app.post('/feedback', (req, res) => {
   const { email, feedback } = req.body;
 
-  if (!email || !feedback) {
-    return res.status(400).json({ message: 'Email and feedback are required.' });
+  // Validate email format
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    return res.status(400).json({ message: 'A valid email is required.' });
   }
 
-  try {
-    const newFeedback = new Feedback({ email, feedback });
-    await newFeedback.save(); // Save feedback to MongoDB
-
-    // Send feedback via email
-    const mailOptions = {
-      from: email,
-      
-      to: process.env.EMAIL_USER, // Replace with your email to receive feedback
-      subject: 'New Feedback from Customer',
-      text: `Feedback: ${feedback}\nFrom: ${email}`,
-    };
-
-    await transporter.sendMail(mailOptions);
-    res.status(201).json({ message: 'Feedback submitted successfully', feedback: newFeedback });
-  } catch (error) {
-    res.status(500).json({ message: 'Error saving feedback', error });
+  // Validate feedback
+  if (!feedback) {
+    return res.status(400).json({ message: 'Feedback is required.' });
   }
+
+  // Log feedback to the console
+  console.log(`Feedback received from ${email}: ${feedback}`);
+
+  // Respond with success message
+  res.status(201).json({ message: 'Feedback submitted successfully' });
 });
 
-// Suggestions endpoints
-app.get('/suggestions', async (req, res) => {
-  try {
-    const allSuggestions = await Suggestion.find(); // Retrieve all suggestions from MongoDB
-    res.json(allSuggestions);
-  } catch (error) {
-    res.status(500).json({ message: 'Error retrieving suggestions', error });
-  }
-});
+// Suggestions submission endpoint
+app.post('/suggestions', (req, res) => {
+  const { suggestion, email } = req.body;
 
-app.post('/suggestions', async (req, res) => {
-  const { suggestion } = req.body;
-
+  // Validate suggestion and email
   if (!suggestion) {
     return res.status(400).json({ message: 'Suggestion is required.' });
   }
 
-  try {
-    const newSuggestion = new Suggestion({ suggestion });
-    await newSuggestion.save(); // Save the suggestion to MongoDB
-    res.status(201).json({ message: 'Suggestion submitted successfully', suggestion: newSuggestion });
-  } catch (error) {
-    res.status(500).json({ message: 'Error saving suggestion', error });
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    return res.status(400).json({ message: 'A valid email is required.' });
   }
+
+  // Log suggestion to the console
+  console.log(`Suggestion received from ${email}: ${suggestion}`);
+
+  // Respond with success message
+  res.status(201).json({ message: 'Suggestion submitted successfully' });
 });
 
 // Start the server
